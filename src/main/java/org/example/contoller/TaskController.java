@@ -29,4 +29,15 @@ public class TaskController {
     public TaskDTO create(@RequestBody TaskDTO task){
         return taskService.create(task);
     }
+
+    @PutMapping(value = "/{id}")
+    public TaskDTO update(@PathVariable Integer id,@RequestBody TaskDTO dto){
+        return taskService.update(id, dto);
+
+    }
+
+    @DeleteMapping(value = "/{id}")
+    public void delete(@ PathVariable Integer id){
+        taskService.delete(id);
+    }
 }

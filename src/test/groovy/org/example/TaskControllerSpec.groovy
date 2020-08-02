@@ -2,9 +2,10 @@ package org.example
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.example.service.TaskService
 import org.springframework.http.MediaType
 import org.example.contoller.TaskController
-import org.example.exceptions.TaskNotFoundExceptions
+import org.example.exceptions.TaskNotFoundException
 import org.example.model.dto.TaskDTO
 import org.example.model.dto.UserDTO
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,6 +34,8 @@ class TaskControllerSpec extends Specification {
     MockMvc mvc
     @Autowired
     TaskController taskController;
+    @Autowired
+    TaskService taskService;
 
     private ObjectMapper objectMapper = new ObjectMapper()
 
@@ -57,7 +60,7 @@ class TaskControllerSpec extends Specification {
         when:
         taskController.findById(3);
         then:
-        def exception = thrown(TaskNotFoundExceptions)
+        def exception = thrown(TaskNotFoundException)
         exception.getMessage() == "Could not find searched Task"
 
         where:
@@ -76,5 +79,45 @@ class TaskControllerSpec extends Specification {
                 .content(request)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+
+        when:
+        def taskFromDb = taskService.findLast()
+        dto3.setId(taskFromDb.getId())
+        then:
+        dto3 == taskService.findLast();
+
     }
+
+    def "schould update Task in the database"() {
+        given:
+        def request = objectMapper.writeValueAsString(task)
+        when:
+        def result = mvc.perform(put('/api/tasks/' + id)
+                .content(request)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andReturn()
+
+        then:
+        result.getResponse().status == 200;
+        taskController.findById(id) == taskFromDatabase
+
+        where:
+        id | task                                                                                             | taskFromDatabase
+        1  | new TaskDTO(1, "testChange", false, 10, new UserDTO("firstName", "LastName", "email@email.com")) | new TaskDTO(1, "testChange", false, 10, new UserDTO("firstName", "LastName", "email@email.com"))
+        2  | new TaskDTO(2, "testChange2", true, null, null)                                                  | new TaskDTO(2, "testChange2", true, null, null)
+    }
+
+    def "schould delete Task with id id=3"() {
+        when:
+        def results = mvc.perform(delete("/api/tasks/3")).andReturn()
+        then:
+        results.getResponse().status == 200
+        when:
+        taskController.findById(3)
+        then:
+        def exception = thrown(TaskNotFoundException)
+        exception.getMessage() == "Could not find searched Task"
+
+    }
+
 }
