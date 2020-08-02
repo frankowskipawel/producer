@@ -9,5 +9,7 @@ import java.util.List;
 @Service
 public interface TaskService  {
     List<TaskDTO> findAll();
+    TaskDTO findById(Integer id);
+    TaskDTO create(TaskDTO task);
 
 }
