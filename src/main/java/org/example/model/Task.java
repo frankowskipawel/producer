@@ -22,7 +22,7 @@ public class Task {
     @Min(0)
     @Max(100)
     private Integer completionPercentage;
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne (fetch = FetchType.LAZY, cascade ={ CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH} )
     private User user;
 
 
